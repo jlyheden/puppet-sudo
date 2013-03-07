@@ -1,3 +1,5 @@
+# Class: sudo::params
+#
 class sudo::params {
   $source_base = "puppet:///modules/${module_name}/"
 
@@ -5,10 +7,12 @@ class sudo::params {
     debian: {
       case $::operatingsystemrelease {
         '7.0': {
-          $source = "${source_base}sudoers.wheezy"
+          $source = ''
+          $template = 'sudo/sudoers.wheezy.erb'
         }
         default: {
-          $source = "${source_base}sudoers.deb"          
+          $source = ''
+          $template = 'sudo/sudoers.deb.erb'
         }
       }
       $package = 'sudo'
@@ -20,28 +24,32 @@ class sudo::params {
       $package = 'sudo'
       $config_file = '/etc/sudoers'
       $config_dir = '/etc/sudoers.d/'
-      $source = "${source_base}sudoers.rhel"
+      $source = ''
+      $template = 'sudo/sudoers.rhel.erb'
       $config_file_group = 'root'
     }
     suse: {
       $package = 'sudo'
       $config_file = '/etc/sudoers'
       $config_dir = '/etc/sudoers.d/'
-      $source = "${source_base}sudoers.suse"
+      $source = ''
+      $template = 'sudo/sudoers.suse.erb'
       $config_file_group = 'root'
     }
     solaris: {
       $package = 'SFWsudo'
       $config_file = '/opt/sfw/etc/sudoers'
       $config_dir = '/opt/sfw/etc/sudoers.d/'
-      $source = "${source_base}sudoers.solaris"
+      $source = ''
+      $template = 'sudo/sudoers.solaris.erb'
       $config_file_group = 'root'
     }
     freebsd: {
       $package = 'security/sudo'
       $config_file = '/usr/local/etc/sudoers'
       $config_dir = '/usr/local/etc/sudoers.d/'
-      $source = "${source_base}sudoers.freebsd"
+      $source = ''
+      $template = 'sudo/sudoers.freebsd.erb'
       $config_file_group = 'wheel'
     }
     default: {
@@ -50,14 +58,16 @@ class sudo::params {
           $package = 'sudo'
           $config_file = '/etc/sudoers'
           $config_dir = '/etc/sudoers.d/'
-          $source = "${source_base}sudoers.deb"
+          $source = ''
+          $template = 'sudo/sudoers.deb.erb'
           $config_file_group = 'root'
         }
         archlinux: {
           $package = 'sudo'
           $config_file = '/etc/sudoers'
           $config_dir = '/etc/sudoers.d/'
-          $source = "${source_base}sudoers.archlinux"
+          $source = ''
+          $template = 'sudo/sudoers.archlinux.erb'
           $config_file_group = 'root'
         }
         default: {

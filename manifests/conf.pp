@@ -37,15 +37,22 @@
 #   }
 #
 # [Remember: No empty lines between comments and class definition]
-define sudo::conf(
-  $ensure = present,
-  $priority = 10,
-  $content = undef,
-  $source = undef,
-  $sudo_config_dir = $sudo::params::config_dir
+define sudo::conf (
+  $ensure           = present,
+  $priority         = 10,
+  $content          = undef,
+  $source           = undef,
+  $sudo_config_dir  = 'UNDEF'
 ) {
 
   include sudo
+
+  # Use config dir from sudo class rather than params
+  # since it can be overriden
+  $sudo_config_dir_real = $sudo_config_dir ? {
+    'UNDEF' => $sudo::config_dir_real,
+    default => $sudo_config_dir
+  }
 
   Class['sudo'] -> Sudo::Conf[$name]
 
@@ -57,7 +64,7 @@ define sudo::conf(
 
   file { "${priority}_${name}":
     ensure  => $ensure,
-    path    => "${sudo_config_dir}${priority}_${name}",
+    path    => "${sudo_config_dir_real}${priority}_${name}",
     owner   => 'root',
     group   => $sudo::params::config_file_group,
     mode    => '0440',

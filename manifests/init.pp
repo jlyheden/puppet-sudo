@@ -43,6 +43,12 @@
 #     what you're doing.
 #     Default: auto-set, platform specific
 #
+#   [*content*]
+#     Alternate sudoers file content
+#     String value to pass to sudoers, could be from a template
+#     evaluated in another scope
+#     Default: blank
+#
 # Actions:
 #   Installs locales package and generates specified locales
 #
@@ -53,16 +59,53 @@
 #   class { 'sudo': }
 #
 # [Remember: No empty lines between comments and class definition]
-class sudo(
-  $ensure = 'present',
-  $autoupgrade = false,
-  $package = $sudo::params::package,
-  $purge = true,
-  $config_file = $sudo::params::config_file,
-  $config_file_replace = true,
-  $config_dir = $sudo::params::config_dir,
-  $source = $sudo::params::source
-) inherits sudo::params {
+class sudo (
+  $ensure               = 'present',
+  $autoupgrade          = false,
+  $package              = 'UNDEF',
+  $purge                = true,
+  $config_file          = 'UNDEF',
+  $config_file_replace  = true,
+  $config_dir           = 'UNDEF',
+  $source               = 'UNDEF',
+  $content              = 'UNDEF'
+) {
+
+  include sudo::params
+
+  $package_real = $package ? {
+    'UNDEF' => $sudo::params::package,
+    default => $package
+  }
+  $config_file_real = $config_file ? {
+    'UNDEF' => $sudo::params::config_file,
+    default => $config_file
+  }
+  $config_dir_real = $config_dir ? {
+    'UNDEF' => $sudo::params::config_dir,
+    default => $config_dir
+  }
+  $source_real = $source ? {
+    'UNDEF' => $sudo::params::source,
+    default => $source
+  }
+  $content_real = $content ? {
+    'UNDEF'   => $sudo::params::template ? {
+      ''      => '',
+      default => template($sudo::params::template)
+    },
+    default   => $content
+  }
+
+  if $source_real != '' and $content_real != '' {
+    fail('Only one of parameters source and content can be set')
+  }
+  if $source_real != '' {
+    File[$config_file_real] { source => $source_real }
+  }
+  if $content_real != '' {
+    File[$config_file_real] { content => $content_real }
+  }
 
   case $ensure {
     /(present)/: {
@@ -82,27 +125,26 @@ class sudo(
     }
   }
 
-  package { $package:
+  package { $package_real:
     ensure => $package_ensure,
   }
 
-  file { $config_file:
+  file { $config_file_real:
     ensure  => $ensure,
     owner   => 'root',
     group   => $sudo::params::config_file_group,
     mode    => '0440',
     replace => $config_file_replace,
-    source  => $source,
-    require => Package[$package],
+    require => Package[$package_real],
   }
 
-  file { $config_dir:
+  file { $config_dir_real:
     ensure  => $dir_ensure,
     owner   => 'root',
     group   => $sudo::params::config_file_group,
     mode    => '0550',
     recurse => $purge,
     purge   => $purge,
-    require => Package[$package],
+    require => Package[$package_real],
   }
 }
