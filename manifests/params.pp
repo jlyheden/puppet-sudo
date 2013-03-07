@@ -2,6 +2,7 @@
 #
 class sudo::params {
   $source_base = "puppet:///modules/${module_name}/"
+  $syntax_check = true # should be verified for all platforms
 
   case $::osfamily {
     debian: {
