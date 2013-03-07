@@ -92,13 +92,8 @@ class sudo (
     },
     default   => $source
   }
-  $content_real = $content ? {
-    'UNDEF'   => $sudo::params::template ? {
-      ''      => undef,
-      default => template($sudo::params::template)
-    },
-    default   => $content
-  }
+  $content_real = $content
+  $content_template = template($sudo::params::template)
 
   if $config_dir_real !~ /\/$/ {
     fail('Parameter config_dir must end with slash')
@@ -110,7 +105,7 @@ class sudo (
   case $content {
     undef, '', 'UNDEF': {
       case $source {
-        undef, '', 'UNDEF': { File[$config_file_real] { content => $content_real } }
+        undef, '', 'UNDEF': { File[$config_file_real] { content => $content_template } }
         default: { File[$config_file_real] { source => $source_real } }
       }
     }
