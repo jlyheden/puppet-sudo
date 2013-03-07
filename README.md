@@ -39,6 +39,7 @@ Manage sudo configuration via Puppet
 * config_file_replace: true or false, default: true. Replace config file with module config file.
 * config_dir: string, default: OS specific. Set config_dir, if platform is not supported.
 * source: string, default: OS specific. Set source, if platform is not supported.
+* content: string, default: OS specific. Set content, if platform is not supported or other customization is needed.
 
 ## sudo::conf parameters
 * ensure: present or absent, default: present
@@ -46,3 +47,4 @@ Manage sudo configuration via Puppet
 * content: string, default: undef
 * source: string, default: undef
 * sudo_config_dir: string, default: OS specific. Set sudo_config_dir, if platform is not supported.
+* syntax_check: boolean, default: OS specific.

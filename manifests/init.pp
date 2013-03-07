@@ -47,7 +47,7 @@
 #     Alternate sudoers file content
 #     String value to pass to sudoers, could be from a template
 #     evaluated in another scope
-#     Default: blank
+#     Default: auto-set, platform specific
 #
 # Actions:
 #   Installs locales package and generates specified locales
@@ -86,25 +86,39 @@ class sudo (
     default => $config_dir
   }
   $source_real = $source ? {
-    'UNDEF' => $sudo::params::source,
-    default => $source
+    'UNDEF'   => $sudo::params::source ? {
+      ''      => '',
+      default => $sudo::params::source
+    },
+    default   => $source
   }
   $content_real = $content ? {
     'UNDEF'   => $sudo::params::template ? {
-      ''      => '',
+      ''      => undef,
       default => template($sudo::params::template)
     },
     default   => $content
   }
 
-  if $source_real != '' and $content_real != '' {
+  if $config_dir_real !~ /\/$/ {
+    fail('Parameter config_dir must end with slash')
+  }
+
+  # 1. If content is set and regardless of source is set, use content
+  # 2. If content is not set and source is set, use source
+  # 3. If no content or source is set: use template
+  case $content {
+    undef, '', 'UNDEF': {
+      case $source {
+        undef, '', 'UNDEF': { File[$config_file_real] { content => $content_real } }
+        default: { File[$config_file_real] { source => $source_real } }
+      }
+    }
+    default: { File[$config_file_real] { content => $content_real } }
+  }
+
+  if $source != 'UNDEF' and $content != 'UNDEF' {
     fail('Only one of parameters source and content can be set')
-  }
-  if $source_real != '' {
-    File[$config_file_real] { source => $source_real }
-  }
-  if $content_real != '' {
-    File[$config_file_real] { content => $content_real }
   }
 
   case $ensure {

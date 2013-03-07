@@ -48,21 +48,28 @@
 define sudo::conf (
   $ensure           = present,
   $priority         = 10,
-  $content          = undef,
-  $source           = undef,
+  $content          = 'UNDEF',
+  $source           = 'UNDEF',
   $sudo_config_dir  = 'UNDEF',
   $syntax_check     = 'UNDEF'
 ) {
 
   include sudo
 
-  # Use config dir from sudo class rather than params
-  # since it can be overriden
+  $source_real = $source ? {
+    'UNDEF' => undef,
+    ''      => undef,
+    default => $source
+  }
+  $content_real = $content ? {
+    'UNDEF' => undef,
+    ''      => undef,
+    default => "${content}\n"
+  }
   $sudo_config_dir_real = $sudo_config_dir ? {
     'UNDEF' => $sudo::config_dir_real,
     default => $sudo_config_dir
   }
-
   $syntax_check_real = $syntax_check ? {
     'UNDEF' => $sudo::params::syntax_check,
     default => $syntax_check
@@ -70,10 +77,20 @@ define sudo::conf (
 
   $dname = "${priority}_${name}"
 
+  if $content_real == undef and $source_real == undef {
+    fail('One of parameters content and source must be set')
+  }
+  if $content_real != undef and $source_real != undef {
+    fail('Only one of parameters content and source can be set')
+  }
+  if $sudo_config_dir_real !~ /\/$/ {
+    fail('Parameter sudo_config_dir must end with slash')
+  }
+
   case $syntax_check_real {
     true: {
       exec { "sudo-syntax-check-${dname}":
-        command     => "visudo -c -f ${sudo_config_dir_real}/${dname} || (rm -f ${sudo_config_dir_real}/${dname} && exit 1)",
+        command     => "visudo -c -f ${sudo_config_dir_real}${dname} || (rm -f ${sudo_config_dir_real}${dname} && exit 1)",
         refreshonly => true,
         path        => [ '/bin', '/usr/bin', '/sbin', '/usr/sbin' ]
       }
@@ -85,19 +102,13 @@ define sudo::conf (
     }
   }
 
-  if $content != undef {
-    $content_real = "${content}\n"
-  } else {
-    $content_real = undef
-  }
-
   file { $dname:
     ensure  => $ensure,
     path    => "${sudo_config_dir_real}${priority}_${name}",
     owner   => 'root',
     group   => $sudo::params::config_file_group,
     mode    => '0440',
-    source  => $source,
+    source  => $source_real,
     content => $content_real,
   }
 }

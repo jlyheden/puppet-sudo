@@ -71,6 +71,22 @@ class sudo::params {
           $template = 'sudo/sudoers.archlinux.erb'
           $config_file_group = 'root'
         }
+        ubuntu: {
+          case $::operatingsystemrelease {
+            '7.0': {
+              $source = ''
+              $template = 'sudo/sudoers.wheezy.erb'
+            }
+            default: {
+              $source = ''
+              $template = 'sudo/sudoers.deb.erb'
+            }
+          }
+          $package = 'sudo'
+          $config_file = '/etc/sudoers'
+          $config_dir = '/etc/sudoers.d/'
+          $config_file_group = 'root'
+        }
         default: {
           fail("Unsupported platform: ${::osfamily}/${::operatingsystem}")
         }
